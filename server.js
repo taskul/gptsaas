@@ -6,6 +6,8 @@ const app = express();
 const mongoose = require('mongoose');
 const errorHandler = require('./middleware/error');
 const cookieParser = require('cookie-parser');
+const path = require('path');
+
 
 // Security middleware
 const helmet = require('helmet');
@@ -38,7 +40,7 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
   console.error('Error connecting to MongoDB:', err.message);
 });
 
-const PORT = process.env.PORT || 4242;
+const PORT = process.env.WEBSITES_PORT || 8080;
 app.use(express.json());
 
 // connect to routes
@@ -50,3 +52,14 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// setting this up after azure deployment
+const node_env = process.env.APPSETTING_NODE_ENV;
+
+// connecting react and rendering front end as a static application
+if (node_env === 'production') {
+  app.use(express.static('./client/build'));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+  });
+};
